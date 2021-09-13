@@ -32,4 +32,4 @@ def print_banner():
                |___/             
                
                     v1.0 | by @EnesSaltk7\n"""
-    print(banner)
+    print(banner, file=sys.stderr)
