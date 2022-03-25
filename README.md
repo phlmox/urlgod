@@ -3,7 +3,7 @@ Recon tool for URLs discovery
 
 # Installation
 
-pip3 install urlgod==2
+pip3 install urlgod
 
 
 # sources
