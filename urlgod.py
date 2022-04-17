@@ -1,28 +1,26 @@
 #!/usr/bin/env python3
 import sys,os,argparse
-from termcolor import colored
+try:
+    from termcolor import colored
+except:
+    pass
 import re,json,requests,time,threading
 from urllib.parse import urlparse
 
 class Service:
-    def ccFetch(self,domain,page):
-        Log(f"Fetching urls from {page}","inf")
-        r = requests.get(f"https://index.commoncrawl.org/{page}-index?url=*.{domain}/*&output=json")
-        data = [json.loads(x) for x in r.text.strip().split('\n')]
-        [print(x["url"],flush=True) for x in data]
 
     def getCommonCrawlURLs(self,domain):
         try:
-            CCS=[(x["id"]) for x in json.loads(requests.get("http://index.commoncrawl.org/collinfo.json").content)]
-            if self.quick:
-                self.ccFetch(domain,CCS[0])
-            else:
-                for t in range(len(CCS)):
-                    time.sleep(10)
-                    threading.Thread(target=self.ccFetch,args=(domain,CCS[t])).start()
+            CCS=[(x["id"]) for x in json.loads(requests.get("http://index.commoncrawl.org/collinfo.json").content)][:5]
+            for page in CCS:
+                Log(f"Fetching urls from {page}","inf")
+                r = requests.get(f"https://index.commoncrawl.org/{page}-index?url=*.{domain}/*&output=json")
+                data = [json.loads(x) for x in r.text.strip().split('\n')]
+                [print(x["url"],flush=True) for x in data]
         except KeyboardInterrupt:
             exit()
-        except:
+        except Exception as e:
+            print(err,e,file=sys.stderr)
             pass
 
     def getVirusTotalURLs(self,domain,apikey):
@@ -54,10 +52,17 @@ class Service:
 
     def otxFetch(self,ind,last,domain,pages):
         for p in range(ind,last):
-            data=json.loads(requests.get(f"https://otx.alienvault.com/api/v1/indicators/domain/{domain}/url_list?limit=500&page={str(p+1)}").text)
-            [print(data["url_list"][i]["url"],flush=True) for i in range(len(data["url_list"]))]
-            self.OTXCollected+=1
-            Log(f"Collected {str(self.OTXCollected)}/{str(pages)} from 'OTX'","inf")
+            while 1:
+                try:
+                    data=json.loads(requests.get(f"https://otx.alienvault.com/api/v1/indicators/domain/{domain}/url_list?limit=500&page={str(p+1)}").text)
+                    [print(data["url_list"][i]["url"],flush=True) for i in range(len(data["url_list"]))]
+                    self.OTXCollected+=1
+                    Log(f"Collected {str(self.OTXCollected)}/{str(pages)} from 'OTX'","inf")
+                    break
+                except KeyboardInterrupt:
+                    exit()
+                except:
+                    time.sleep(20)
         self.wait+=1
 
     def getOTXURLs(self,domain):
@@ -86,22 +91,21 @@ class Service:
         except KeyboardInterrupt:
             exit()
         except Exception as e:
-            Log(f"Error with 'OTX'","err")
+            Log(f"Error with 'OTX'"+e,"err")
 
     def Get(self,domain):
         Log(f"Collecting urls from 'WebArchive'","ok")
-        self.getWaybackURLs(domain)
+        #self.getWaybackURLs(domain)
         Log(f"Collecting urls from 'CommonCrawl'","ok")
         self.getCommonCrawlURLs(domain)
         if self.virustotal != None:
             Log(f"Collecting urls from 'VirusTotal'","ok")
             self.getVirusTotalURLs(domain,self.virustotal)
         Log(f"Collecting urls from 'OTX'","ok")
-        self.getOTXURLs(domain)
+        #self.getOTXURLs(domain)
         return 1
     
-    def __init__(self,quick,threads,virustotal):
-        self.quick = quick
+    def __init__(self,threads,virustotal):
         self.virustotal = virustotal
         self.OTXThreads = threads
         self.OTXCollected = 0
@@ -139,7 +143,7 @@ def print_banner():
                 __/ |            
                |___/             
                
-                    v1.0 | by @EnesSaltk7\n"""
+                    v1.1 | by @EnesSaltk7\n"""
     print(banner, file=sys.stderr)
 
 
@@ -147,7 +151,6 @@ parser = argparse.ArgumentParser(description='urlgod - Fetches URLs from various
 
 parser.add_argument('-d', '--domain', help="Domain")
 parser.add_argument('-v', '--virustotal', required=False, help="Virustotal API Key")
-parser.add_argument('-q', '--quick', action='store_true', help="Quick scan")
 parser.add_argument('-s', '--silent', action='store_true', help="Silent mode")
 parser.add_argument('-t', '--threads', default=5,help="Default 5")
 
@@ -161,5 +164,5 @@ args = parser.parse_args()
 if not args.silent:
     print_banner()
 Log("Fetching urls for "+args.domain,"ok")
-o=Service(args.quick,int(args.threads),args.virustotal).Get(args.domain)
+o=Service(int(args.threads),args.virustotal).Get(args.domain)
 Log("Good luck haxor!","ok")
