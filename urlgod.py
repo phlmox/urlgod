@@ -95,14 +95,14 @@ class Service:
 
     def Get(self,domain):
         Log(f"Collecting urls from 'WebArchive'","ok")
-        #self.getWaybackURLs(domain)
+        self.getWaybackURLs(domain)
         Log(f"Collecting urls from 'CommonCrawl'","ok")
         self.getCommonCrawlURLs(domain)
         if self.virustotal != None:
             Log(f"Collecting urls from 'VirusTotal'","ok")
             self.getVirusTotalURLs(domain,self.virustotal)
         Log(f"Collecting urls from 'OTX'","ok")
-        #self.getOTXURLs(domain)
+        self.getOTXURLs(domain)
         return 1
     
     def __init__(self,threads,virustotal):
@@ -143,7 +143,7 @@ def print_banner():
                 __/ |            
                |___/             
                
-                    v1.1 | by @EnesSaltk7\n"""
+                    v2.1 | by @EnesSaltk7\n"""
     print(banner, file=sys.stderr)
 
 
