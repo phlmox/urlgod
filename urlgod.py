@@ -89,8 +89,8 @@ class Service:
                     pass
         except KeyboardInterrupt:
             exit()
-        except Exception as e:
-            Log(f"Error with 'OTX'"+e,"err")
+        except:
+            Log(f"Error with 'OTX'","err")
 
     def Get(self,domain):
         Log(f"Collecting urls from 'WebArchive'","ok")
