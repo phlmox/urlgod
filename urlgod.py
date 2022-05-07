@@ -19,8 +19,7 @@ class Service:
                 [print(x["url"],flush=True) for x in data]
         except KeyboardInterrupt:
             exit()
-        except Exception as e:
-            print(err,e,file=sys.stderr)
+        except:
             pass
 
     def getVirusTotalURLs(self,domain,apikey):
